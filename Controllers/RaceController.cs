@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NetMVCLearning.Models;
 using NetMVCLearning.Repository.Interfaces;
+using NetMVCLearning.Services;
+using NetMVCLearning.ViewModels;
 
 namespace NetMVCLearning.Controllers;
 
-public class RaceController(IRaceRepository raceRepository) : Controller
+public class RaceController(IRaceRepository raceRepository, IPhotoService photoService) : Controller
 {
+    private readonly IPhotoService _photoService = photoService;
     private readonly IRaceRepository _raceRepository = raceRepository;
 
     // GET
@@ -21,14 +24,34 @@ public class RaceController(IRaceRepository raceRepository) : Controller
         return View(race);
     }
     
-    public IActionResult Create(Race race)
+    public async Task<IActionResult> Create(CreateRaceViewModel createRaceVM)
     {
-        if (!ModelState.IsValid)
+        if (ModelState.IsValid)
         {
-            return View(race);
+            var photoResult = await _photoService.AddPhotoAsync(createRaceVM.Image);
+            
+            var club = new Race()
+            {
+                Address = new Address()
+                {
+                    City = createRaceVM.City,
+                    State = createRaceVM.State,
+                    Street = createRaceVM.Street
+                },
+                Description = createRaceVM.Description,
+                Title = createRaceVM.Title,
+                RaceCategory = createRaceVM.RaceCategory,
+                Image = photoResult.Url.ToString()
+            };
+
+            _raceRepository.Add(club);
+            return RedirectToAction("Index");
+        }
+        else
+        {
+            ModelState.AddModelError("", "Photo upload failed");
         }
 
-        _raceRepository.Add(race);
-        return RedirectToAction("Index");
+        return View(createRaceVM);
     }
 }

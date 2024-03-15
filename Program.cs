@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using NetMVCLearning.Data;
+using NetMVCLearning.Helpers;
 using NetMVCLearning.Repository;
 using NetMVCLearning.Repository.Interfaces;
+using NetMVCLearning.Services;
+using NetMVCLearning.Services.Implementation;
 
 namespace NetMVCLearning;
 
@@ -19,6 +22,8 @@ public class Program
         });
         builder.Services.AddScoped<IClubRepository, ClubRepository>();
         builder.Services.AddScoped<IRaceRepository, RaceRepository>();
+        builder.Services.Configure<CloudanarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+        builder.Services.AddScoped<IPhotoService, PhotoService>();
 
         var app = builder.Build();
 
