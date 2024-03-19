@@ -15,11 +15,11 @@ public class Club
     
     [ForeignKey("Address")]
     public int AddressId { get; set; }
-
     public Address Address { get; set; }
+    
     public ClubCategory ClubCategory { get; set; }
 
     [ForeignKey("AppUser")]
-    public int? AppUserId { get; set; }
+    public string? AppUserId { get; set; }
     public AppUser? AppUser { get; set; }
 }
