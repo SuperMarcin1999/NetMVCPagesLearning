@@ -1,4 +1,5 @@
 ﻿
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NetMVCLearning.Data;
@@ -57,4 +58,65 @@ public class ClubController(IClubRepository clubRepository, IPhotoService photoS
 
         return View(createClubVM);
     }
-}
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var oldClub = await _clubRepository.GetByIdAsync(id);
+        if (oldClub is null) return View("Error");
+
+        var clubVM = new EditClubViewModel()
+        {
+            Title = oldClub.Title,
+            ClubCategory = oldClub.ClubCategory,
+            Street = oldClub.Address.Street,
+            City = oldClub.Address.City,
+            Description = oldClub.Description,
+            State = oldClub.Address.State,
+            AddressId = oldClub.Address.Id,
+        };
+
+        return View(clubVM);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(int id, EditClubViewModel editClubVM)
+    {
+        var oldClub = await clubRepository.GetByIdNoTrackingAsync(id);
+        if (oldClub is null) return View("Error");
+
+        try
+        {
+            var imageLocation = oldClub.Image;
+            if (!string.IsNullOrEmpty(imageLocation))
+            {
+                await _photoService.DeletePhotoAsync(imageLocation);
+            }
+        }
+        catch
+        {
+            ModelState.AddModelError("", "Error occured while deleting old image");
+            return View(editClubVM);
+        }
+
+        var photoUpload = await _photoService.AddPhotoAsync(editClubVM.NewImage);
+
+        var address = oldClub.Address;
+        address.City = editClubVM.City;
+        address.Street = editClubVM.Street;
+        address.State = editClubVM.State;
+        
+        var club = new Club()
+        {
+            Id = id,
+            Description = editClubVM.Description,
+            Title = oldClub.Description,
+            Image = photoUpload.Url.ToString(),
+            AddressId = editClubVM.AddressId,
+            Address = address,
+            ClubCategory = oldClub.ClubCategory,
+        };
+
+        _clubRepository.Update(club);
+        return RedirectToAction("Index");
+    }
+ }

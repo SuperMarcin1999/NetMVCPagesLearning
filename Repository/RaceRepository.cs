@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NetMVCLearning.Data;
 using NetMVCLearning.Models;
 using NetMVCLearning.Repository.Interfaces;
@@ -18,6 +19,15 @@ public class RaceRepository(ApplicationDbContext dbContext) : IRaceRepository
     {
         return await _dbContext.Races
             .Include(r => r.Address)
+            .FirstOrDefaultAsync(c => c!.Id == id);
+    }
+    
+    [HttpPost]
+    public async Task<Race?> GetByIdNoTrackingAsync(int id)
+    {
+        return await _dbContext.Races
+            .Include(r => r.Address)
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c!.Id == id);
     }
 

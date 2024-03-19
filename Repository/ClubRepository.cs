@@ -21,6 +21,14 @@ public class ClubRepository(ApplicationDbContext dbContext) : IClubRepository
             .FirstOrDefaultAsync(c => c!.Id == id);
     }
 
+    public async Task<Club?> GetByIdNoTrackingAsync(int id)
+    {
+        return await _dbContext.Clubs
+            .Include(c => c.Address)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c!.Id == id);
+    }
+
     public async Task<IEnumerable<Club>> GetByCityAsync(string city)
     {
         return await _dbContext.Clubs
