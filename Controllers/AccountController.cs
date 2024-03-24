@@ -67,4 +67,46 @@ public class AccountController : Controller
             return View(loginVM);
         }
     }
+    
+    public IActionResult Register()
+    {
+        var response = new RegisterViewModel();
+        return View(response);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Register(RegisterViewModel registerVM)
+    {
+        if (!ModelState.IsValid)
+            return View(registerVM);
+
+        var user = await _userManager.FindByEmailAsync(registerVM.Email);
+        if (user is not null)
+        {
+            TempData["Error"] = "Email already exist!";
+            return View(registerVM);
+        }
+        
+        var newUser = new AppUser()
+        {
+            Email = registerVM.Email,
+            UserName = registerVM.Email
+        };
+        var creationResult = await _userManager.CreateAsync(newUser, registerVM.Password);
+        if (!creationResult.Succeeded)
+        {
+            TempData["Error"] = creationResult.Errors.FirstOrDefault()?.Description;
+            return View(registerVM);
+        }
+        
+        await _userManager.AddToRoleAsync(newUser, UserRoles.User);
+        
+        return RedirectToAction("Index", "Race");
+    }
+
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction("Index", "Race");
+    }
 }
